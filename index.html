@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>合成大 ba</title>
+<meta name="theme-color" content="#eaf4fb">
+<meta name="description" content="把两个一样的学生撞在一起，她们会变成下一级。">
+<meta property="og:title" content="合成大 ba">
+<meta property="og:description" content="kei → alice → koharu → miyako → kazusa → reisa → natsu → kotori → kokona → midori → last">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%237ec8e3'/%3E%3Ccircle cx='50' cy='50' r='46' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='17' fill='%234a9fe0'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#22303c;
+    --paper:#eef7fd;
+    --line:rgba(34,48,60,.12);
+    --accent:#3f9fd8;
+    --accent2:#f48fb1;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 640px at 12% -12%, #dff2ff 0%, transparent 62%),
+      radial-gradient(900px 560px at 102% 4%, #ffe3ee 0%, transparent 58%),
+      linear-gradient(160deg,#f7fcff 0%,#eaf4fb 48%,#e3eef8 100%);
+    display:flex; align-items:center; justify-content:center;
+    padding:14px; overflow:auto;
+    overscroll-behavior:none; min-height:100dvh;
+  }
+  #app{display:flex; gap:16px; align-items:center; max-width:100%}
+
+  /* ---------------- 舞台 ---------------- */
+  #stage{
+    position:relative; flex:none;
+    width:min(46vw, 54vh, 380px);
+    aspect-ratio:380 / 560;
+    border-radius:24px; background:#fff; overflow:hidden;
+    box-shadow:0 24px 54px -20px rgba(42,92,124,.5), 0 0 0 1px rgba(255,255,255,.8) inset;
+  }
+  #game{display:block; width:100%; height:100%; touch-action:none; cursor:pointer}
+
+  #banner{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(240,249,255,.88); backdrop-filter:blur(6px); padding:22px; text-align:center;
+  }
+  #banner.show{display:flex}
+  #banner .card{animation:pop .35s cubic-bezier(.2,1.6,.4,1); max-width:100%}
+  #banner h2{margin:0 0 8px; font-size:26px; letter-spacing:.4px}
+  #banner p{margin:0 0 16px; color:#5f7386; font-size:13px; line-height:1.6}
+  .bigbtn{
+    border:0; cursor:pointer; font:inherit; font-weight:700; color:#fff;
+    background:linear-gradient(180deg,#59b6e8,#3f9fd8);
+    padding:11px 28px; border-radius:999px; font-size:15px;
+    box-shadow:0 10px 20px -8px rgba(63,159,216,.9); transition:transform .12s;
+  }
+  .bigbtn:active{transform:translateY(1px) scale(.98)}
+  @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
+
+  /* ---------------- 侧栏 ---------------- */
+  #panel{width:clamp(200px,19vw,262px); max-height:53vh; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:10px; padding-right:8px; scrollbar-gutter:stable}
+  #title{display:flex; align-items:baseline; gap:7px}
+  #title h1{
+    margin:0; font-size:clamp(19px,2.1vw,26px); line-height:1; white-space:nowrap; letter-spacing:-.4px;
+    background:linear-gradient(135deg,#3f9fd8,#7a6bd6 55%,#f48fb1);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  #title span{font-size:10px; letter-spacing:2px; color:#8aa3b5}
+  @media (max-width:1080px){ #title span{display:none} }
+
+  .card{
+    background:rgba(255,255,255,.8); border:1px solid var(--line);
+    border-radius:16px; padding:12px 14px; box-shadow:0 10px 22px -20px rgba(42,92,124,.9);
+  }
+  .row{display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0}
+  .row > *{min-width:0}
+  .row .sub{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .label{font-size:10px; letter-spacing:1.5px; color:#8aa3b5; text-transform:uppercase}
+  #score{font-size:34px; font-weight:800; line-height:1.05; font-variant-numeric:tabular-nums}
+  #score.bump{animation:bump .3s cubic-bezier(.2,1.8,.4,1)}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .sub{font-size:11.5px; color:#7d93a5}
+  #best{font-weight:700; color:#3f9fd8}
+
+  #nextWrap{display:flex; align-items:center; gap:10px; margin-top:8px}
+  #nextCv{width:56px;height:56px;border-radius:15px;background:#f4fafd;border:1px solid var(--line);flex:none}
+  #nextName{font-weight:700; font-size:14px}
+  #nextDesc{font-size:10.5px; color:#8aa3b5; margin-top:2px}
+
+  /* 音量 */
+  .vol{display:flex; align-items:center; gap:8px; margin-top:8px}
+  .vol:first-of-type{margin-top:10px}
+  .vol .name{font-size:11.5px; color:#5f7386; width:30px; flex:none}
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; flex:1; height:4px; border-radius:99px;
+    background:#d6e6f1; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#3f9fd8; box-shadow:0 1px 4px rgba(63,159,216,.6); cursor:pointer;
+  }
+  .sw{
+    flex:none; width:34px; height:19px; border-radius:99px; border:0; cursor:pointer; position:relative;
+    background:#cddcea; transition:background .18s;
+  }
+  .sw::after{
+    content:''; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .18s;
+  }
+  .sw[aria-pressed="true"]{background:#3f9fd8}
+  .sw[aria-pressed="true"]::after{transform:translateX(15px)}
+  .sw[aria-pressed="false"]{background:#cfd9e2}
+
+  #chain{display:flex; flex-direction:column; gap:4px; margin-top:6px}
+  .link{display:flex; align-items:center; gap:7px; font-size:11.5px; color:#54687a}
+  .link img{width:21px;height:21px;border-radius:50%;object-fit:cover;flex:none;
+    box-shadow:0 0 0 1.5px #fff, 0 1px 4px rgba(0,0,0,.18); background:#e6f1f8}
+  .link .dot{width:21px;height:21px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px #fff}
+  .link .sz{margin-left:auto; font-size:9.5px; color:#a8bcc9; font-variant-numeric:tabular-nums}
+  .link.locked{opacity:.38; filter:saturate(.15)}
+
+  #tools{display:flex; gap:7px}
+  .ibtn{
+    flex:1; border:1px solid var(--line); background:rgba(255,255,255,.85); border-radius:11px;
+    padding:8px 0; cursor:pointer; font:inherit; font-size:12px; color:#54687a; transition:background .15s,transform .1s;
+  }
+  .ibtn:hover{background:#fff}
+  .ibtn:active{transform:scale(.97)}
+  .hint{font-size:11px; color:#8aa3b5; line-height:1.65}
+  kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;
+      padding:0 4px;font-size:10px;font-family:inherit;color:#54687a}
+
+  @media (max-width: 640px){
+    body{align-items:flex-start; padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+    #app{flex-direction:column; align-items:center; gap:8px}
+    #title{display:none}
+    #stage{width:min(94vw, 42vh, 380px); border-radius:18px}
+    #panel{width:min(94vw,380px); max-height:none; flex-direction:column; gap:6px; padding-right:0}
+    .card{padding:7px 10px; border-radius:12px}
+    #score{font-size:24px}
+    #nextDesc{display:none}
+    #nextName{font-size:13px}
+    #nextCv{width:38px;height:38px}
+    #chainWrap{display:none}
+    #nextWrap{margin-top:3px; gap:7px}
+    .vol{margin-top:3px}
+    .vol:first-of-type{margin-top:5px}
+    .hint{display:none}
+    .hint{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="game" width="760" height="1120"></canvas>
+    <div id="banner">
+      <div class="card">
+        <h2 id="bTitle">合成大 ba</h2>
+        <p id="bText">两个一样的撞在一起，会变成下一级。<br>合成时会有语音，第一级 kei 在放下来的时候说话。</p>
+        <button class="bigbtn" id="bBtn">开始</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div id="title"><h1>合成大 ba</h1><span>MERGE</span></div>
+
+    <div class="card">
+      <div class="row"><span class="label">Score</span><span class="sub">最高 <span id="best">0</span></span></div>
+      <div id="score">0</div>
+      <div class="sub" id="meta" style="margin-top:2px">⏱ 0:00 · 0 球</div>
+      <div class="row" style="margin-top:8px"><span class="label">Next</span><span class="sub" id="comboTag"></span></div>
+      <div id="nextWrap">
+        <canvas id="nextCv" width="112" height="112"></canvas>
+        <div><div id="nextName">—</div><div id="nextDesc">下一个</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="label">音量</span>
+      <div class="vol">
+        <span class="name">音乐</span>
+        <input type="range" id="bgmVol" min="0" max="100" value="45">
+        <button class="sw" id="bgmSw" aria-pressed="true" title="开/关音乐"></button>
+      </div>
+      <div class="vol">
+        <span class="name">音效</span>
+        <input type="range" id="sfxVol" min="0" max="100" value="80">
+        <button class="sw" id="sfxSw" aria-pressed="true" title="开/关音效"></button>
+      </div>
+    </div>
+
+    <div class="card" id="chainWrap">
+      <span class="label">进化链 · 小 → 大</span>
+      <div id="chain"></div>
+    </div>
+
+    <div id="tools">
+      <button class="ibtn" id="btnReset">↻ 重开</button>
+      <button class="ibtn" id="btnMute">🔊 全部静音</button>
+    </div>
+
+    <div class="hint">
+      <kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>空格</kbd> 落下 · <kbd>R</kbd> 重开 · <kbd>M</kbd> 静音<br>
+      鼠标点/触摸屏幕也能玩。
+    </div>
+  </div>
+</div>
+
+<script>
+/* 脚本炸了也别只给一片黑 */
+(function () {
+  function fatal(msg, extra) {
+    var b = document.getElementById('banner');
+    if (!b) return;
+    var t = document.getElementById('bTitle'), x = document.getElementById('bText');
+    var btn = document.getElementById('bBtn');
+    if (t) t.textContent = '游戏没能启动';
+    if (x) { x.textContent = msg + (extra ? '  (' + extra + ')' : ''); x.style.fontFamily = 'ui-monospace,Consolas,monospace'; }
+    if (btn) { btn.textContent = '刷新重试'; btn.onclick = function () { location.reload(); }; }
+    b.classList.add('show');
+  }
+  window.addEventListener('error', function (e) {
+    var f = (e.filename || '').split('/').pop();
+    fatal(e.message || '脚本错误', f ? f + ':' + e.lineno : '');
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason || {};
+    fatal('Promise 失败：' + (r.message || r), '');
+  });
+  window.__fatal = fatal;
+})();
+</script>
+<script src="matter.min.js?v=1"></script>
+<script src="game.js?v=1"></script>
+</body>
+</html>
